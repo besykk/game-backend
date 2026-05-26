@@ -1,0 +1,28 @@
+[
+    {
+        "id": 1,
+        "name": "Grisha",
+        "money": 9300,
+        "role": "admin",
+        "inventory": [
+            "Phone",
+            "Phone",
+            "Armor",
+            "Phone"
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Anton",
+        "money": 777,
+        "role": "user",
+        "inventory": []
+    },
+    {
+        "id": 3,
+        "name": "Max",
+        "money": 3500,
+        "role": "user",
+        "inventory": []
+    }
+]

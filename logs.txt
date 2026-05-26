@@ -1,0 +1,12 @@
+[2026-05-26T20:02:28.551Z] Grisha used command: /buy phone
+[2026-05-26T20:02:32.099Z] Grisha used command: /buy Phone
+[2026-05-26T20:02:35.960Z] Grisha paid Anton 500
+[2026-05-26T20:02:39.992Z] Admin Grisha created player Test with ID 4
+[2026-05-26T20:02:43.607Z] Admin Grisha deleted player Test with ID 4
+[2026-05-26T20:07:55.933Z] Admin Grisha created player test with ID 4
+[2026-05-26T20:55:29.587Z] Grisha paid Anton 100
+[2026-05-26T20:55:37.314Z] Admin Grisha added shop item Armor for 3000
+[2026-05-26T21:00:36.420Z] Grisha paid Anton 100
+[2026-05-26T21:02:45.685Z] Grisha bought Phone for 500
+[2026-05-26T21:02:55.927Z] Admin Grisha deleted shop item Armor
+[2026-05-26T21:17:55.131Z] Admin Grisha changed Anton money to 777

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Phone",
+        "price": 500
+    },
+    {
+        "name": "Medkit",
+        "price": 1500
+    },
+    {
+        "name": "Repairbox",
+        "price": 650
+    }
+]
