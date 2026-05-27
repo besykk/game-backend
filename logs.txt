@@ -10,3 +10,11 @@
 [2026-05-26T21:02:45.685Z] Grisha bought Phone for 500
 [2026-05-26T21:02:55.927Z] Admin Grisha deleted shop item Armor
 [2026-05-26T21:17:55.131Z] Admin Grisha changed Anton money to 777
+[2026-05-27T09:00:32.735Z] Player created: SqlTest with ID 4
+[2026-05-27T09:54:25.040Z] Grisha paid Anton 100
+[2026-05-27T10:14:16.304Z] Admin Grisha changed Anton money to 999
+[2026-05-27T10:29:57.689Z] Admin Grisha changed Anton money to 12345
+[2026-05-27T10:40:46.106Z] Player created: DeleteTest with ID 5
+[2026-05-27T11:02:35.306Z] Admin Grisha added shop item Armor for 3000
+[2026-05-27T11:12:33.037Z] Admin Grisha deleted shop item Armor
+[2026-05-27T12:03:34.449Z] Grisha removed inventory item Phone

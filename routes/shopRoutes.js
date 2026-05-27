@@ -7,132 +7,123 @@ const createAdminMiddleware = require("../middlewares/adminMiddleware");
 
 const { isPositiveNumber, isNotEmptyString, } = require("../utils/validators");
 
+const { getAllShopItems, createShopItem, deleteShopItemByName, buyItem, } = require("../models/shopModel");
+
 function createShopRoutes(players, shop) {
     const router = express.Router();
 
-    const adminMiddleware = createAdminMiddleware(players);
+    const adminMiddleware = createAdminMiddleware();
 
-    router.get("/", (req, res) => {
-        res.json(shop.items);
+    router.get("/", async (req, res, next) => {
+        try {
+            const items = await getAllShopItems();
+
+            res.json(items);
+        } catch (error) {
+            next(error);
+        }
     });
 
-    router.post("/buy", (req, res) => {
-        const playerId = Number(req.body.playerId);
-        const itemName = req.body.itemName;
+    router.post("/buy", async (req, res, next) => {
+        try {
+            const playerId = Number(req.body.playerId);
+            const itemName = req.body.itemName;
 
-        if (isNaN(playerId)) {
-            return res.status(400).json({
-                message: "playerId должен быть числом",
+            if (isNaN(playerId)) {
+                return res.status(400).json({
+                    message: "playerId должен быть числом",
+                });
+            }
+
+            if (!itemName) {
+                return res.status(400).json({
+                    message: "Введите название предмета",
+                });
+            }
+
+            const result = await buyItem(playerId, itemName);
+
+            logAction(`${result.player.name} bought ${result.item.name} for ${result.item.price}`);
+
+            res.json({
+                message: `${result.player.name} купил ${result.item.name} за ${result.item.price}`,
+                player: result.player,
+                item: result.item,
             });
+        } catch (error) {
+            if (error.message === "PLAYER_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Игрок не найден",
+                });
+            }
+            if (error.message === "ITEM_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Такого предмета нет в магазине",
+                });
+            }
+
+            if (error.message === "NOT_ENOUGH_MONEY") {
+                return res.status(400).json({
+                    message: "Недостаточно денег",
+                });
+            }
+
+            next(error);
         }
-
-        if (!itemName) {
-            return res.status(400).json({
-                message: "Введите название предмета",
-            });
-        }
-
-        const player = players.find((p) => p.id === playerId);
-
-        if (!player) {
-            return res.status(404).json({
-                message: "Игрок не найден",
-            });
-        }
-
-        const item = shop.items.find((item) => item.name === itemName);
-
-        if (!item) {
-            return res.status(404).json({
-                message: "Такого предмета нет в магазине",
-            });
-        }
-
-        const success = player.removeMoney(item.price);
-
-        if (!success) {
-            return res.status(400).json({
-                message: "Недостаточно денег",
-            });
-        }
-
-        player.addItem(item.name);
-
-        savePlayers(players);
-        logAction(`${player.name} bought ${item.name} for ${item.price}`);
-
-        res.json({
-            message: `${player.name} купил ${item.name} за ${item.price}`,
-            player,
-        });
     });
 
-    router.post("/items", adminMiddleware, (req, res) => {
-        const admin = req.admin;
-        const name = req.body?.name;
-        const price = Number(req.body?.price);
+    router.post("/items", adminMiddleware, async (req, res, next) => {
+        try {
+            const admin = req.admin;
+            const name = req.body?.name;
+            const price = Number(req.body?.price);
 
-        if (!isNotEmptyString(name)) {
-            return res.status(400).json({
-                message: "Введите название предмета",
-            });
+            if (!isNotEmptyString(name)) {
+                return res.status(400).json({
+                    message: "Введите название предмета",
+                });
+            }
+
+            if (!isPositiveNumber(price)) {
+                return res.status(400).json({
+                    message: "Введите корректную цену",
+                });
+            }
+
+            const newItem = await createShopItem(name, price);
+
+            logAction(`Admin ${admin.name} added shop item ${newItem.name} for ${newItem.price}`);
+
+            res.status(201).json({message: "Предмет добавлен в магаизн", item: newItem,});
+        } catch (error) {
+            if (error.code == "ER_DUP_ENTRY") {
+                return res.status(400).json({message: "Такой предмет уже есть в магазине",});
+            }
         }
-
-        if (!isPositiveNumber(price)) {
-            return res.status(400).json({
-                message: "Введите корректную цену",
-            });
-        }
-
-        const existingItem = shop.items.find((item) => item.name === name);
-
-        if (existingItem) {
-            return res.status(400).json({
-                message: "Такой предмет уже есть в магазине",
-            });
-        }
-
-        const newItem = {
-            name,
-            price,
-        };
-
-        shop.items.push(newItem);
-
-        saveShop(shop.items);
-        logAction(`Admin ${admin.name} added shop item ${newItem.name} for ${newItem.price}`);
-
-        res.status(201).json({
-            message: "Предмет добавлен в магазин",
-            item: newItem,
-            shop: shop.items,
-        });
     });
 
-    router.delete("/items/:name", adminMiddleware, (req, res) => {
-        const admin = req.admin;
-        const itemName = req.params.name;
+    router.delete("/items/:name", adminMiddleware, async (req, res, next) => {
+        try {
+            const admin = req.admin;
+            const itemName = req.params.name;
 
-        const itemIndex = shop.items.findIndex((item) => item.name === itemName);
+            const deletedItem = await deleteShopItemByName(itemName);
 
-        if (itemIndex === -1) {
-            return res.status(404).json({
-                message: "Предмет не найден",
+            if (!deletedItem) {
+                return res.status(404).json({
+                    message: "Предмет не найден",
+                });
+            }
+
+            logAction(`Admin ${admin.name} deleted shop item ${deletedItem.name}`);
+
+            res.json({
+                message: `Предмет ${deletedItem.name} удалён из магазина`,
+                item: deletedItem,
             });
+        } catch (error) {
+            next(error);
         }
-
-        const deletedItem = shop.items[itemIndex];
-
-        shop.items.splice(itemIndex, 1);
-
-        saveShop(shop.items);
-        logAction(`Admin ${admin.name} deleted shop item ${deletedItem.name}`);
-
-        res.json({
-            message: `Предмет ${deletedItem.name} удалён из магазина`,
-            item: deletedItem,
-            shop: shop.items,
-        });
     });
 
     return router;

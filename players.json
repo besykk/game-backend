@@ -14,7 +14,7 @@
     {
         "id": 2,
         "name": "Anton",
-        "money": 777,
+        "money": 999,
         "role": "user",
         "inventory": []
     },
