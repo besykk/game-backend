@@ -3,7 +3,7 @@
 Мини-проект backend-сервера для игровой логики на **Node.js + Express**.
 
 Проект сделан как учебный pet-project под направление backend-разработки для игровых серверов.  
-Он имитирует базовую серверную логику: игроков, баланс, инвентарь, магазин, покупки, переводы денег, админ-действия, сохранение данных и логирование.
+Он имитирует базовую серверную логику: игроков, баланс, инвентарь, магазин, покупки, переводы денег, админ-действия, хранение данных в MySQL, JWT-авторизацию и логирование.
 
 ---
 
@@ -16,15 +16,18 @@
 - Получение игрока по ID
 - Перевод денег между игроками
 - Покупка предметов в магазине
+- Работа с инвентарём игроков
 - Админ-команды:
   - удаление игроков
-  - изменение баланса
+  - изменение баланса игроков
   - добавление предметов в магазин
   - удаление предметов из магазина
+- Авторизация через JWT
+- Защита админских маршрутов через токен
 - Проверка прав администратора через middleware
 - Обработка неизвестных маршрутов
 - Обработка внутренних ошибок
-- Сохранение данных в JSON-файлы
+- Хранение данных в MySQL
 - Логирование действий в `logs.txt`
 - Настройки через `.env`
 
@@ -38,6 +41,8 @@
 - MySQL / MariaDB
 - mysql2
 - dotenv
+- JWT
+- jsonwebtoken
 - REST API
 - Middleware
 
@@ -57,9 +62,30 @@ npm install
 
 ```env
 PORT=3000
+
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=game_db
+
+JWT_SECRET=super_secret_key
 ```
 
-### 3. Запустить сервер
+### 3. Создать базу данных
+
+Можно создать базу и таблицы одной командой, если в проекте есть файл `sql/schema.sql`:
+
+```bash
+mysql -u root < sql/schema.sql
+```
+
+Если у MySQL root с паролем:
+
+```bash
+mysql -u root -p < sql/schema.sql
+```
+
+### 4. Запустить сервер
 
 ```bash
 npm start
@@ -93,25 +119,28 @@ node server.js
 
 ```text
 game-backend/
-  classes/
-    Players.js
-    Shop.js
-
-  commands/
-    handleCommand.js
+  db/
+    connection.js
+    testConnection.js
 
   middlewares/
     adminMiddleware.js
+    authMiddleware.js
     errorMiddleware.js
     notFoundMiddleware.js
 
+  models/
+    healthModel.js
+    playerModel.js
+    shopModel.js
+
   routes/
+    authRoutes.js
     playersRoutes.js
     shopRoutes.js
 
-  storage/
-    playerStorage.js
-    shopStorage.js
+  sql/
+    schema.sql
 
   utils/
     logger.js
@@ -119,11 +148,7 @@ game-backend/
 
   .env
   .gitignore
-  config.js
-  index.js
   server.js
-  players.json
-  shop.json
   logs.txt
   package.json
   README.md
@@ -142,7 +167,7 @@ id
 name
 money
 role
-inventory
+password
 ```
 
 Пример игрока:
@@ -152,8 +177,47 @@ inventory
   "id": 1,
   "name": "Grisha",
   "money": 14000,
-  "role": "admin",
-  "inventory": ["Phone"]
+  "role": "admin"
+}
+```
+
+### Inventory Item
+
+Предмет в инвентаре имеет:
+
+```js
+id
+player_id
+item_name
+```
+
+Пример:
+
+```json
+{
+  "id": 1,
+  "player_id": 1,
+  "item_name": "Phone"
+}
+```
+
+### Shop Item
+
+Предмет магазина имеет:
+
+```js
+id
+name
+price
+```
+
+Пример:
+
+```json
+{
+  "id": 1,
+  "name": "Phone",
+  "price": 500
 }
 ```
 
@@ -183,8 +247,6 @@ user
 
 Проверяет, что сервер работает.
 
-Пример:
-
 ```bash
 curl http://localhost:3000
 ```
@@ -193,6 +255,89 @@ curl http://localhost:3000
 
 ```text
 Game backend API is working
+```
+
+---
+
+## Health Check
+
+### GET `/health`
+
+Проверяет работу API и подключение к базе данных.
+
+```bash
+curl http://localhost:3000/health
+```
+
+Пример ответа:
+
+```json
+{
+  "status": "ok",
+  "api": "working",
+  "database": "connected"
+}
+```
+
+---
+
+# Auth API
+
+## Логин
+
+### POST `/auth/login`
+
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Grisha","password":"123456"}'
+```
+
+Body:
+
+```json
+{
+  "name": "Grisha",
+  "password": "123456"
+}
+```
+
+Пример ответа:
+
+```json
+{
+  "message": "Login success",
+  "token": "jwt_token_here",
+  "player": {
+    "id": 1,
+    "name": "Grisha",
+    "role": "admin"
+  }
+}
+```
+
+---
+
+## Проверить токен
+
+### GET `/auth/me`
+
+```bash
+curl http://localhost:3000/auth/me \
+  -H "Authorization: Bearer TOKEN_HERE"
+```
+
+Пример ответа:
+
+```json
+{
+  "message": "Token is valid",
+  "user": {
+    "id": 1,
+    "name": "Grisha",
+    "role": "admin"
+  }
+}
 ```
 
 ---
@@ -215,15 +360,13 @@ curl http://localhost:3000/players
     "id": 1,
     "name": "Grisha",
     "money": 14000,
-    "role": "admin",
-    "inventory": ["Phone"]
+    "role": "admin"
   },
   {
     "id": 2,
     "name": "Anton",
     "money": 1000,
-    "role": "user",
-    "inventory": []
+    "role": "user"
   }
 ]
 ```
@@ -245,8 +388,7 @@ curl http://localhost:3000/players/1
   "id": 1,
   "name": "Grisha",
   "money": 14000,
-  "role": "admin",
-  "inventory": ["Phone"]
+  "role": "admin"
 }
 ```
 
@@ -287,8 +429,7 @@ Body:
     "id": 4,
     "name": "Ilya",
     "money": 1000,
-    "role": "user",
-    "inventory": []
+    "role": "user"
   }
 }
 ```
@@ -324,15 +465,13 @@ Body:
     "id": 1,
     "name": "Grisha",
     "money": 13500,
-    "role": "admin",
-    "inventory": ["Phone"]
+    "role": "admin"
   },
   "toPlayer": {
     "id": 2,
     "name": "Anton",
     "money": 1500,
-    "role": "user",
-    "inventory": []
+    "role": "user"
   }
 }
 ```
@@ -343,19 +482,20 @@ Body:
 
 ### PUT `/players/:id/money`
 
-Только админ.
+Только админ.  
+Нужен JWT-токен администратора.
 
 ```bash
 curl -X PUT http://localhost:3000/players/2/money \
   -H "Content-Type: application/json" \
-  -d '{"adminId":1,"money":5000}'
+  -H "Authorization: Bearer TOKEN_HERE" \
+  -d '{"money":5000}'
 ```
 
 Body:
 
 ```json
 {
-  "adminId": 1,
   "money": 5000
 }
 ```
@@ -370,8 +510,7 @@ Body:
     "id": 2,
     "name": "Anton",
     "money": 5000,
-    "role": "user",
-    "inventory": []
+    "role": "user"
   }
 }
 ```
@@ -382,20 +521,12 @@ Body:
 
 ### DELETE `/players/:id`
 
-Только админ.
+Только админ.  
+Нужен JWT-токен администратора.
 
 ```bash
 curl -X DELETE http://localhost:3000/players/4 \
-  -H "Content-Type: application/json" \
-  -d '{"adminId":1}'
-```
-
-Body:
-
-```json
-{
-  "adminId": 1
-}
+  -H "Authorization: Bearer TOKEN_HERE"
 ```
 
 Пример ответа:
@@ -408,8 +539,7 @@ Body:
     "id": 4,
     "name": "Ilya",
     "money": 1000,
-    "role": "user",
-    "inventory": []
+    "role": "user"
   }
 }
 ```
@@ -431,14 +561,17 @@ curl http://localhost:3000/shop
 ```json
 [
   {
+    "id": 1,
     "name": "Phone",
     "price": 500
   },
   {
+    "id": 2,
     "name": "Medkit",
     "price": 1500
   },
   {
+    "id": 3,
     "name": "Repairbox",
     "price": 650
   }
@@ -475,8 +608,12 @@ Body:
     "id": 1,
     "name": "Grisha",
     "money": 13500,
-    "role": "admin",
-    "inventory": ["Phone"]
+    "role": "admin"
+  },
+  "item": {
+    "id": 1,
+    "name": "Phone",
+    "price": 500
   }
 }
 ```
@@ -487,19 +624,20 @@ Body:
 
 ### POST `/shop/items`
 
-Только админ.
+Только админ.  
+Нужен JWT-токен администратора.
 
 ```bash
 curl -X POST http://localhost:3000/shop/items \
   -H "Content-Type: application/json" \
-  -d '{"adminId":1,"name":"Armor","price":3000}'
+  -H "Authorization: Bearer TOKEN_HERE" \
+  -d '{"name":"Armor","price":3000}'
 ```
 
 Body:
 
 ```json
 {
-  "adminId": 1,
   "name": "Armor",
   "price": 3000
 }
@@ -511,6 +649,7 @@ Body:
 {
   "message": "Предмет добавлен в магазин",
   "item": {
+    "id": 4,
     "name": "Armor",
     "price": 3000
   }
@@ -523,20 +662,12 @@ Body:
 
 ### DELETE `/shop/items/:name`
 
-Только админ.
+Только админ.  
+Нужен JWT-токен администратора.
 
 ```bash
 curl -X DELETE http://localhost:3000/shop/items/Armor \
-  -H "Content-Type: application/json" \
-  -d '{"adminId":1}'
-```
-
-Body:
-
-```json
-{
-  "adminId": 1
-}
+  -H "Authorization: Bearer TOKEN_HERE"
 ```
 
 Пример ответа:
@@ -545,6 +676,7 @@ Body:
 {
   "message": "Предмет Armor удалён из магазина",
   "item": {
+    "id": 4,
     "name": "Armor",
     "price": 3000
   }
@@ -553,11 +685,120 @@ Body:
 
 ---
 
+# Inventory API
+
+## Получить инвентарь игрока
+
+### GET `/players/:id/inventory`
+
+```bash
+curl http://localhost:3000/players/1/inventory
+```
+
+Пример ответа:
+
+```json
+{
+  "player": {
+    "id": 1,
+    "name": "Grisha",
+    "money": 13900,
+    "role": "admin"
+  },
+  "inventory": [
+    {
+      "id": 1,
+      "item_name": "Phone"
+    }
+  ]
+}
+```
+
+---
+
+## Получить весь инвентарь всех игроков
+
+### GET `/players/inventory/all`
+
+```bash
+curl http://localhost:3000/players/inventory/all
+```
+
+Пример ответа:
+
+```json
+[
+  {
+    "id": 1,
+    "player_id": 1,
+    "player_name": "Grisha",
+    "item_name": "Phone"
+  }
+]
+```
+
+---
+
+## Удалить предмет из инвентаря игрока
+
+### DELETE `/players/:id/inventory/:itemId`
+
+```bash
+curl -X DELETE http://localhost:3000/players/1/inventory/1
+```
+
+Пример ответа:
+
+```json
+{
+  "message": "Предмет Phone удален из инвентаря",
+  "player": {
+    "id": 1,
+    "name": "Grisha",
+    "money": 13900,
+    "role": "admin"
+  },
+  "item": {
+    "id": 1,
+    "player_id": 1,
+    "item_name": "Phone"
+  }
+}
+```
+
+---
+
 # Middleware
+
+## authMiddleware
+
+Проверяет JWT-токен из заголовка:
+
+```text
+Authorization: Bearer TOKEN_HERE
+```
+
+Если токен не передан:
+
+```json
+{
+  "message": "Токен не передан"
+}
+```
+
+Если токен неверный или просрочен:
+
+```json
+{
+  "message": "Неверный или просроченный токен"
+}
+```
+
+---
 
 ## adminMiddleware
 
-Проверяет, что запрос выполняет администратор.
+Проверяет, что запрос выполняет пользователь с ролью `admin`.
 
 Используется для защищённых действий:
 
@@ -568,10 +809,11 @@ Body:
 
 Пример защищённого запроса:
 
-```json
-{
-  "adminId": 1
-}
+```bash
+curl -X PUT http://localhost:3000/players/2/money \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN_HERE" \
+  -d '{"money":5000}'
 ```
 
 Если пользователь не админ:
@@ -587,8 +829,6 @@ Body:
 ## notFoundMiddleware
 
 Обрабатывает неизвестные маршруты.
-
-Пример:
 
 ```bash
 curl http://localhost:3000/test
@@ -618,29 +858,48 @@ curl http://localhost:3000/test
 
 ---
 
-## База данных
+# База данных
 
 Проект использует MySQL.
 
-### Создание базы данных
+## Быстрая настройка базы
+
+```bash
+mysql -u root < sql/schema.sql
+```
+
+Если root с паролем:
+
+```bash
+mysql -u root -p < sql/schema.sql
+```
+
+---
+
+## Создание базы данных вручную
 
 ```sql
 CREATE DATABASE game_db;
 USE game_db;
 ```
 
-### Таблица игроков
+---
+
+## Таблица игроков
 
 ```sql
 CREATE TABLE players (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     money INT NOT NULL DEFAULT 1000,
-    role VARCHAR(20) NOT NULL DEFAULT 'user'
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
+    password VARCHAR(255) NOT NULL DEFAULT '123456'
 );
 ```
 
-### Таблица магазина
+---
+
+## Таблица магазина
 
 ```sql
 CREATE TABLE shop_items (
@@ -650,7 +909,9 @@ CREATE TABLE shop_items (
 );
 ```
 
-### Таблица инвентаря
+---
+
+## Таблица инвентаря
 
 ```sql
 CREATE TABLE inventory_items (
@@ -661,14 +922,16 @@ CREATE TABLE inventory_items (
 );
 ```
 
-### Тестовые данные
+---
+
+## Тестовые данные
 
 ```sql
-INSERT INTO players (name, money, role)
+INSERT INTO players (name, money, role, password)
 VALUES
-('Grisha', 14000, 'admin'),
-('Anton', 1000, 'user'),
-('Max', 3500, 'user');
+('Grisha', 14000, 'admin', '123456'),
+('Anton', 1000, 'user', '123456'),
+('Max', 3500, 'user', '123456');
 
 INSERT INTO shop_items (name, price)
 VALUES
@@ -677,15 +940,14 @@ VALUES
 ('Repairbox', 650);
 ```
 
+---
 
 # Хранение данных
 
 Данные хранятся в MySQL:
 
 - `players` — игроки
-
 - `shop_items` — предметы магазина
-
 - `inventory_items` — инвентарь игроков
 
 Логи действий пока сохраняются в файл:
@@ -696,12 +958,12 @@ VALUES
 
 # Примеры проверки
 
-## Создать игрока
+## Логин админа
 
 ```bash
-curl -X POST http://localhost:3000/players \
+curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"name":"Test"}'
+  -d '{"name":"Grisha","password":"123456"}'
 ```
 
 ## Посмотреть игроков
@@ -726,3 +988,10 @@ curl -X POST http://localhost:3000/shop/buy \
   -d '{"playerId":1,"itemName":"Phone"}'
 ```
 
+## Посмотреть инвентарь
+
+```bash
+curl http://localhost:3000/players/1/inventory
+```
+
+---
