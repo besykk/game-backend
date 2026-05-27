@@ -125,6 +125,15 @@ async function getAllInventoryItems() {
     return rows;
 }
 
+async function getPlayerByName(name) {
+    const [rows] = await pool.query(
+        "SELECT * FROM players WHERE name = ?",
+        [name]
+    );
+
+    return rows[0];
+}
+
 module.exports = {
     getAllPlayers,
     getPlayerById,
@@ -135,4 +144,5 @@ module.exports = {
     getPlayerInventory,
     deleteInventoryItem,
     getAllInventoryItems,
+    getPlayerByName,
 };

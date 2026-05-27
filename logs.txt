@@ -19,3 +19,4 @@
 [2026-05-27T11:12:33.037Z] Admin Grisha deleted shop item Armor
 [2026-05-27T12:03:34.449Z] Grisha removed inventory item Phone
 [2026-05-27T12:51:22.521Z] Grisha bought Phone for 500
+[2026-05-27T13:33:03.108Z] Admin Grisha changed Anton money to 5555

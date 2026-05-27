@@ -1,7 +1,7 @@
 const express = require("express");
 
 const logAction = require("../utils/logger");
-const createAdminMiddleware = require("../middlewares/adminMiddleware");
+const adminMiddleware = require("../middlewares/adminMiddleware");
 
 const { 
     isPositiveNumber, 
@@ -24,7 +24,6 @@ const {
 function createPlayersRoutes(players) {
 
     const router = express.Router();
-    const adminMiddleware = createAdminMiddleware();
 
     router.get("/", async (req, res, next) => {
         try {

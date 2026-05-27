@@ -14,6 +14,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const notFoundMiddleware = require("./middlewares/notFoundMiddleware");
 
 const { checkDatabaseConnection } = require("./models/healthModel");
+const createAuthRoutes = require("./routes/authRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,8 @@ if (players.length === 0) {
         new Player(3, "Max", 3500, "user"),
     ];
 }
+
+app.use("/auth", createAuthRoutes());
 
 app.use("/players", createPlayersRoutes(players));
 
