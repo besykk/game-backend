@@ -35,8 +35,9 @@
 - JavaScript
 - Node.js
 - Express
+- MySQL / MariaDB
+- mysql2
 - dotenv
-- JSON file storage
 - REST API
 - Middleware
 
@@ -617,33 +618,79 @@ curl http://localhost:3000/test
 
 ---
 
+## База данных
+
+Проект использует MySQL.
+
+### Создание базы данных
+
+```sql
+CREATE DATABASE game_db;
+USE game_db;
+```
+
+### Таблица игроков
+
+```sql
+CREATE TABLE players (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    money INT NOT NULL DEFAULT 1000,
+    role VARCHAR(20) NOT NULL DEFAULT 'user'
+);
+```
+
+### Таблица магазина
+
+```sql
+CREATE TABLE shop_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    price INT NOT NULL
+);
+```
+
+### Таблица инвентаря
+
+```sql
+CREATE TABLE inventory_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    player_id INT NOT NULL,
+    item_name VARCHAR(50) NOT NULL,
+    FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+);
+```
+
+### Тестовые данные
+
+```sql
+INSERT INTO players (name, money, role)
+VALUES
+('Grisha', 14000, 'admin'),
+('Anton', 1000, 'user'),
+('Max', 3500, 'user');
+
+INSERT INTO shop_items (name, price)
+VALUES
+('Phone', 500),
+('Medkit', 1500),
+('Repairbox', 650);
+```
+
+
 # Хранение данных
 
-Пока данные хранятся в JSON-файлах:
+Данные хранятся в MySQL:
 
-```text
-players.json
-shop.json
-logs.txt
-```
+- `players` — игроки
 
-## players.json
+- `shop_items` — предметы магазина
 
-Хранит игроков.
+- `inventory_items` — инвентарь игроков
 
-## shop.json
+Логи действий пока сохраняются в файл:
 
-Хранит предметы магазина.
-
-## logs.txt
-
-Хранит логи действий:
-
-```text
-[2026-05-27T00:00:00.000Z] Player created: Ilya with ID 4
-[2026-05-27T00:01:00.000Z] Grisha paid Anton 500
-[2026-05-27T00:02:00.000Z] Admin Grisha added shop item Armor for 3000
-```
+- `logs.txt`
 
 ---
 
