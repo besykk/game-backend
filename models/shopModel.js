@@ -44,7 +44,7 @@ async function buyItem(playerId, itemName) {
             throw new Error("PLAYER_NOT_FOUND");
         }
 
-        const [itemsRows] = await connection.query("SELECT * FROM players WHERE id = ?", [itemName]);
+        const [itemsRows] = await connection.query("SELECT * FROM shop_items WHERE name = ?", [itemName]);
 
         const item = itemsRows[0];
 
@@ -58,7 +58,7 @@ async function buyItem(playerId, itemName) {
 
         await connection.query("UPDATE players SET money = money - ? WHERE id = ?", [item.price, playerId]);
 
-        await connection.query("INSERT INTO inventory_items (players_id, item_name) VALUES (?, ?)", [playerId, item.name]);
+        await connection.query("INSERT INTO inventory_items (player_id, item_name) VALUES (?, ?)", [playerId, item.name]);
 
         await connection.commit();
 

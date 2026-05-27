@@ -112,6 +112,19 @@ async function deleteInventoryItem(playerId, itemId) {
     
 }
 
+async function getAllInventoryItems() {
+    const [rows] = await pool.query(`
+        SELECT
+            inventory_items.id,
+            inventory_items.player_id,
+            players.name AS player_name
+        FROM inventory_items
+        JOIN players ON inventory_items.player_id = players.id
+    `);
+    
+    return rows;
+}
+
 module.exports = {
     getAllPlayers,
     getPlayerById,
@@ -121,4 +134,5 @@ module.exports = {
     deletePlayerById,
     getPlayerInventory,
     deleteInventoryItem,
+    getAllInventoryItems,
 };

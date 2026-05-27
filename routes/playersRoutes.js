@@ -17,7 +17,8 @@ const {
     updatePlayerMoney, 
     deletePlayerById, 
     getPlayerInventory, 
-    deleteInventoryItem, 
+    deleteInventoryItem,
+    getAllInventoryItems,
 } = require("../models/playerModel");
 
 function createPlayersRoutes(players) {
@@ -30,6 +31,16 @@ function createPlayersRoutes(players) {
             const playerFromDb = await getAllPlayers();
             
             res.json(playerFromDb);
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.get("/inventory/all", async (req, res, next) => {
+        try {
+            const inventory = await getAllInventoryItems();
+
+            res.json(inventory);
         } catch (error) {
             next(error);
         }

@@ -18,3 +18,4 @@
 [2026-05-27T11:02:35.306Z] Admin Grisha added shop item Armor for 3000
 [2026-05-27T11:12:33.037Z] Admin Grisha deleted shop item Armor
 [2026-05-27T12:03:34.449Z] Grisha removed inventory item Phone
+[2026-05-27T12:51:22.521Z] Grisha bought Phone for 500
