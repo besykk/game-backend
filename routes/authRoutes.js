@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 const { getPlayerByName } = require("../models/playerModel");
@@ -33,7 +34,9 @@ function createAuthRoutes() {
                 });
             }
 
-            if (player.password !== password) {
+            const isPasswordValid = await bcrypt.compare(password, player.password_hash);
+
+            if (!isPasswordValid) {
                 return res.status(401).json({
                     message: "Неверный пароль",
                 });
