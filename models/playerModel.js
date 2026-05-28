@@ -12,8 +12,10 @@ async function getPlayerById(id) {
     return rows[0];
 }
 
-async function createPlayer(name) {
-    const [result] = await pool.query("INSERT INTO players (name, money, role) VALUES (?, ?, ?)",[name, 1000, "user"]);
+async function createPlayer(name, passwordHash) {
+    const [result] = await pool.query(
+        "INSERT INTO players (name, money, role, password_hash) VALUES (?, ?, ?, ?)",
+        [name, 1000, "user", passwordHash]);
     return {
         id: result.insertId,
         name, 
@@ -117,7 +119,8 @@ async function getAllInventoryItems() {
         SELECT
             inventory_items.id,
             inventory_items.player_id,
-            players.name AS player_name
+            players.name AS player_name,
+            inventory_items.item_name
         FROM inventory_items
         JOIN players ON inventory_items.player_id = players.id
     `);

@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 
 const logAction = require("../utils/logger");
 const adminMiddleware = require("../middlewares/adminMiddleware");
@@ -142,7 +143,7 @@ function createPlayersRoutes(players) {
         }
     });
 
-    router.post("/", async (req, res, next) => {
+    router.post("/", adminMiddleware, async (req, res, next) => {
         try {
             const name = req.body.name;
 
@@ -150,12 +151,16 @@ function createPlayersRoutes(players) {
                 return res.status(400).json({message: "Введите имя игрока"});
             }
 
-            const newPlayer = await createPlayer(name);
+            const defaultPassword = "123456";
+            const passwordHash = await bcrypt.hash(defaultPassword, 10);
+
+            const newPlayer = await createPlayer(name, passwordHash);
 
             logAction(`Player created: ${newPlayer.name} with ID ${newPlayer.id}`);
 
             res.status(201).json({
                 message: "Игрок создан",
+                defaultPassword,
                 player: newPlayer,
             });
         } catch (error) {

@@ -20,3 +20,4 @@
 [2026-05-27T12:03:34.449Z] Grisha removed inventory item Phone
 [2026-05-27T12:51:22.521Z] Grisha bought Phone for 500
 [2026-05-27T13:33:03.108Z] Admin Grisha changed Anton money to 5555
+[2026-05-28T11:08:27.148Z] Player created: AdminCreated2 with ID 8
