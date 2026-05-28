@@ -1,19 +1,6 @@
 const express = require("express");
 
-const logAction = require("../utils/logger");
 const adminMiddleware = require("../middlewares/adminMiddleware");
-
-const { 
-    isPositiveNumber, 
-    isNotEmptyString, 
-} = require("../utils/validators");
-
-const { 
-    getAllShopItems, 
-    createShopItem, 
-    deleteShopItemByName, 
-    buyItem, 
-} = require("../models/shopModel");
 
 const {
     getAllShopItemsController,

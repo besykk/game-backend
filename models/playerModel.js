@@ -32,7 +32,7 @@ async function transferMoney(fromId, toId, amount) {
 
         const [fromRows] = await connection.query("SELECT * FROM players WHERE id = ?", [fromId]);
 
-        const [toRows] = await connection.query("SELECT * FROM players where id = ?", [toId]);
+        const [toRows] = await connection.query("SELECT * FROM players WHERE id = ?", [toId]);
 
         const fromPlayer = fromRows[0];
         const toPlayer = toRows[0];

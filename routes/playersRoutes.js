@@ -2,24 +2,6 @@ const express = require("express");
 
 const adminMiddleware = require("../middlewares/adminMiddleware");
 
-const { 
-    isPositiveNumber, 
-    isNonNegativeNumber, 
-    isNotEmptyString, 
-} = require("../utils/validators");
-
-const { 
-    getAllPlayers, 
-    getPlayerById, 
-    createPlayer, 
-    transferMoney, 
-    updatePlayerMoney, 
-    deletePlayerById, 
-    getPlayerInventory, 
-    deleteInventoryItem,
-    getAllInventoryItems,
-} = require("../models/playerModel");
-
 const {
     getAllPlayersController,
     getPlayerByIdController,
@@ -28,7 +10,7 @@ const {
     deleteInventoryItemController,
     transferMoneyController,
     updatePlayerMoneyController,
-    deletedPlayerByIdController,
+    deletePlayerByIdController,
     createPlayerController
 } = require("../controllers/playerController")
 
@@ -50,7 +32,7 @@ function createPlayersRoutes(players) {
  
     router.post("/pay", transferMoneyController);
 
-    router.delete("/:id", adminMiddleware, deletedPlayerByIdController); 
+    router.delete("/:id", adminMiddleware, deletePlayerByIdController); 
 
     router.put("/:id/money", adminMiddleware, updatePlayerMoneyController);
 

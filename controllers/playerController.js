@@ -1,4 +1,3 @@
-const { player } = require("../config");
 const bcrypt = require("bcrypt");
 const logAction = require("../utils/logger");
 
@@ -145,7 +144,7 @@ async function transferMoneyController(req, res, next) {
 
         if (isNaN(fromId) || isNaN(toId) || isNaN(amount)) {
             return res.status(400).json({
-                message: "fromdId, toId и amount должны быть числами",
+                message: "fromId, toId и amount должны быть числами",
             });
         }
 
@@ -156,7 +155,7 @@ async function transferMoneyController(req, res, next) {
         }
 
         if (fromId === toId) {
-            return res.sta(400).json({
+            return res.status(400).json({
                 message: "Нельзя перевести деньги самому себе",
             });
         }
@@ -227,7 +226,7 @@ async function updatePlayerMoneyController(req, res, next) {
     }
 }
 
-async function deletedPlayerByIdController(req, res, next) {
+async function deletePlayerByIdController(req, res, next) {
     try {
         const playerId = Number(req.params.id);
         const admin = req.admin;
@@ -303,6 +302,6 @@ module.exports = {
     deleteInventoryItemController,
     transferMoneyController,
     updatePlayerMoneyController,
-    deletedPlayerByIdController,
+    deletePlayerByIdController,
     createPlayerController,
 };
