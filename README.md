@@ -45,6 +45,7 @@
 - jsonwebtoken
 - REST API
 - Middleware
+- bcrypt
 
 ---
 
@@ -893,7 +894,7 @@ CREATE TABLE players (
     name VARCHAR(50) NOT NULL UNIQUE,
     money INT NOT NULL DEFAULT 1000,
     role VARCHAR(20) NOT NULL DEFAULT 'user',
-    password VARCHAR(255) NOT NULL DEFAULT '123456'
+    password_hash VARCHAR(255) NOT NULL
 );
 ```
 

@@ -3,11 +3,58 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const authMiddleware = require("../middlewares/authMiddleware");
 
-const { getPlayerByName } = require("../models/playerModel");
-const { isNotEmptyString } = require("../utils/validators");
+const { 
+    getPlayerByName, 
+    registerPlayer, 
+} = require("../models/playerModel");
+
+const { 
+    isNotEmptyString, 
+} = require("../utils/validators");
 
 function createAuthRoutes() {
     const router = express.Router();
+
+    router.post("/register", async (req, res, next) => {
+        try {
+            const name = req.body?.name;
+            const password = req.body?.password;
+
+            if (!isNotEmptyString(name)) {
+                return res.status(400).json({
+                    message: "Введите имя",
+                });
+            }
+
+            if (!isNotEmptyString(password)) {
+                return res.status(400).json({
+                    message: "Введите пароль",
+                });
+            }
+
+            if (password.lenght < 6) {
+                return res.status(400).json({
+                    message: "Пароль должен быть минимум 6 символов",
+                });
+            }
+
+            const passwordHash = await bcrypt.hash(password, 10);
+
+            const newPlayer = await registerPlayer(name, passwordHash);
+
+            res.status(201).json({
+                message: "Регистрация успешна",
+                player: newPlayer,
+            });
+        } catch (error) {
+            if (error.code === "ER_DUP_ENTRY") {
+                return res.status(400).json({
+                    message: "Игрок с таким именем уже существует",
+                });
+            }
+            next(error);
+        }
+    });
 
     router.post("/login", async (req, res, next) => {
         try {

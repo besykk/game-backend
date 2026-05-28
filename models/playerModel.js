@@ -134,10 +134,25 @@ async function getPlayerByName(name) {
     return rows[0];
 }
 
+async function registerPlayer(name, passwordHash) {
+    const [result] = await pool.query(
+        "INSERT INTO players (name, money, role, password_hash) VALUES (?, ?, ?, ?)",
+        [name, 1000, "user", passwordHash]
+    );
+
+    return {
+        id: result.insertId,
+        name,
+        money: 1000,
+        role: "user",
+    };
+}
+
 module.exports = {
     getAllPlayers,
     getPlayerById,
     createPlayer,
+    registerPlayer,
     transferMoney,
     updatePlayerMoney,
     deletePlayerById,
